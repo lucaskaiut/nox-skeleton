@@ -1,0 +1,107 @@
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate } from 'react-router'
+import {
+  Button,
+  ButtonLink,
+  Card,
+  CardContent,
+  Form,
+  Page,
+  PageContent,
+  PageHeader,
+  RadioGroupField,
+  TextField,
+} from '@/shared/design-system'
+import { isApiError } from '@/shared/api/errors'
+import { applyApiErrorsToForm } from '@/shared/utils/forms'
+import { useCreateApiToken } from '../hooks/useApiTokens'
+import {
+  apiTokenSchema,
+  EXPIRATION_OPTIONS,
+  resolveExpiresAt,
+  type ApiTokenFormValues,
+} from '../schemas/api-token.schema'
+import { TokenSecretModal } from '../components/TokenSecretModal'
+
+export default function ApiTokenCreatePage() {
+  const navigate = useNavigate()
+  const createToken = useCreateApiToken()
+  const [issuedToken, setIssuedToken] = useState<string | null>(null)
+
+  const form = useForm<ApiTokenFormValues>({
+    resolver: zodResolver(apiTokenSchema),
+    defaultValues: { name: '', expiration: 'never' },
+  })
+
+  const onSubmit = async (values: ApiTokenFormValues) => {
+    try {
+      const issued = await createToken.mutateAsync({
+        name: values.name,
+        expires_at: resolveExpiresAt(values.expiration),
+      })
+
+      setIssuedToken(issued.token)
+    } catch (error) {
+      if (isApiError(error) && error.status === 422) {
+        applyApiErrorsToForm(form, error)
+      }
+    }
+  }
+
+  return (
+    <Page>
+      <PageHeader
+        title="Novo token de API"
+        description="Gere um token para integrações externas com a API."
+        breadcrumb={[
+          { label: 'Dashboard', to: '/dashboard' },
+          { label: 'Tokens de API', to: '/api-tokens' },
+          { label: 'Novo token' },
+        ]}
+      />
+
+      <PageContent className="max-w-2xl">
+        <Card>
+          <CardContent>
+            <Form form={form} onSubmit={onSubmit} className="space-y-6">
+              <TextField
+                name="name"
+                label="Nome do token"
+                placeholder="Ex.: Integração ERP"
+                hint="Use um nome que identifique onde o token será utilizado."
+                required
+              />
+
+              <RadioGroupField
+                name="expiration"
+                label="Expiração"
+                options={[...EXPIRATION_OPTIONS]}
+                required
+              />
+
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <ButtonLink to="/api-tokens" variant="secondary">
+                  Cancelar
+                </ButtonLink>
+                <Button type="submit" loading={createToken.isPending}>
+                  Gerar token
+                </Button>
+              </div>
+            </Form>
+          </CardContent>
+        </Card>
+      </PageContent>
+
+      <TokenSecretModal
+        token={issuedToken}
+        open={issuedToken !== null}
+        onClose={() => {
+          setIssuedToken(null)
+          navigate('/api-tokens')
+        }}
+      />
+    </Page>
+  )
+}
