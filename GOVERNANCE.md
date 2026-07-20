@@ -1,90 +1,50 @@
 # Template Governance — nox-skeleton
 
-> Priority: This document overrides implicit project conventions.
-> All agents and developers must consult it before any implementation.
+> The template is a **generic multi-tenant SaaS starter** — not a CMS, ERP, or eCommerce.
 
-## Context
-
-This repository is the **Origin Template** — the CORE of the NOX CMS platform.
-It is the single source of truth for all generic, reusable, and structural code.
-
-- **Remote:** `template` → `git@github.com:lucaskaiut/nox-skeleton.git`
-
-## Core Principle
-
-Every change in a derived project MUST be classified before implementation.
-CORE changes must flow **Template → Project**, not the reverse.
+**Remote:** `template` → `git@github.com:lucaskaiut/nox-skeleton.git`
 
 ---
 
-## CORE vs PROJECT
+## Template = Generic Infrastructure
 
-### Template owns (CORE)
+The template provides what **any SaaS** needs: multi-tenancy, ACL, auth, user/role/token management, Design System, layouts, guards, Docker.
+
+**Project** code is domain-specific: posts, products, invoices, leads, AI publishers.
+
+---
+
+## CORE (Template)
 
 | Layer | Concern |
 |---|---|
-| **API** | Multi-tenancy, ACL/RBAC, Auth (Sanctum + session), User CRUD, Role CRUD, API tokens, Shared utilities, Middleware, Error handling, DB structure, Factories/Seeders, Route conventions |
-| **Web** | Design System (28 components), HTTP layer (Axios/CSRF), State stores, Guards, Layouts, Router, Providers, CSS tokens/themes, Auth/Dashboard/Users/Roles/API Tokens modules |
-| **Infra** | Docker Compose, PHP/Nginx/MySQL/Node containers, Environment templates |
+| **Backend** | Tenant resolver, ACL (RBAC), Auth (Sanctum), User/Token CRUD, Shared utils, File upload, Middleware, Error handling, DB structure for core entities |
+| **Frontend** | Design System components, HTTP layer, Stores, Guards, Layouts, Router, Providers, Auth/Dashboard/Users/Roles/Tokens modules |
+| **Infra** | Docker Compose, PHP/Nginx/MySQL/Node containers |
 
-### Project owns (PROJECT)
+## PROJECT (Application)
 
 | Concern |
 |---|
-| Domain entities (Product, Invoice, School…) |
-| Business workflows |
-| Custom integrations (ERP, payments…) |
-| Specific reports |
-| Client-specific features |
+| Blog / Posts / Categories |
+| Products / Orders / eCommerce |
+| Invoices / ERP |
+| CRM entities |
+| AI content publisher |
+| Any domain-specific entity or workflow |
 
 ---
 
-## Classification
+## Key Rules
 
-### CORE
-Reusable by any derived project. **Implement FIRST in the Template**, then
-propagate to the project.
-
-### PROJECT
-Specific to the current system. Implement **only in the project**. Never
-modify the Template.
-
-### HYBRID
-Both generic and specific parts. Extract the reusable portion to the
-Template; keep the specific portion in the project.
-
----
-
-## Decision Questions
-
-1. Would this be useful for other derived projects?
-2. Is there any reusable part?
-3. Am I altering infrastructure, layout, components, or architecture?
-4. Am I adding only a domain-specific business rule?
-5. Should this exist in every system created from this Template?
-
-If unsure → classify as **HYBRID** and document the reasoning.
-
----
-
-## Preferred Flow
-
-```
-Template → validate → version → propagate → Project → validate
-```
-
-Reverse flow (Project → Template) is allowed only for emergency fixes
-or when work was already started in the project. **Syncing back to the
-Template is mandatory before closing the task.**
+- **Permission enum** in template contains only infrastructure permissions (user.*, tenant.*, role.*, api-token.*). Domain permissions go in the project.
+- **Design System components** are always CORE — UI primitives, not domain logic.
+- **Decision test:** "Would an ERP, eCommerce, or CRM need this?" No → PROJECT.
 
 ---
 
 ## Closing Checklist
 
-- [ ] Change classified (CORE / PROJECT / HYBRID)?
-- [ ] Reusable part identified?
+- [ ] Change classified?
 - [ ] If CORE: Template updated first?
 - [ ] No divergence between Template and Project?
-- [ ] Commits respect the classification?
-
-No CORE task is complete while divergence exists between Project and Template.
