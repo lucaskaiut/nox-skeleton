@@ -2,6 +2,7 @@
 
 use App\Modules\ACL\Http\Middleware\EnsurePermission;
 use App\Modules\ApiToken\Http\Middleware\AuthenticateApiToken;
+use App\Modules\ApiToken\Http\Middleware\MultiAuthenticate;
 use App\Modules\Shared\Http\ApiError;
 use App\Modules\Tenant\Exceptions\TenantCouldNotBeResolved;
 use App\Modules\Tenant\Http\Middleware\ResolveTenant;
@@ -33,11 +34,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => ResolveTenant::class,
             'permission' => EnsurePermission::class,
             'auth.api-token' => AuthenticateApiToken::class,
+            'auth.multi' => MultiAuthenticate::class,
         ]);
 
         $middleware->prependToPriorityList(
             SubstituteBindings::class,
             ResolveTenant::class,
+        );
+
+        $middleware->prependToPriorityList(
+            ResolveTenant::class,
+            MultiAuthenticate::class,
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
