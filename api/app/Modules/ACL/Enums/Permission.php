@@ -28,6 +28,9 @@ enum Permission: string
     case POST_DELETE = 'post.delete';
     case POST_PUBLISH = 'post.publish';
 
+    case AI_PUBLISH = 'ai.publish';
+    case AI_READ = 'ai.read';
+
     /**
      * @return list<string>
      */

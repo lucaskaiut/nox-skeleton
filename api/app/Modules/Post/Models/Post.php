@@ -20,7 +20,7 @@ class Post extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'title', 'slug', 'excerpt', 'content',
+        'title', 'slug', 'excerpt', 'content', 'reading_time',
         'featured_image', 'featured_image_alt', 'status',
         'meta_title', 'meta_description', 'meta_keywords', 'canonical_url',
         'og_title', 'og_description', 'og_image',
@@ -35,6 +35,7 @@ class Post extends Model
             'include_in_sitemap' => 'boolean',
             'is_featured' => 'boolean',
             'published_at' => 'datetime',
+            'reading_time' => 'integer',
         ];
     }
 

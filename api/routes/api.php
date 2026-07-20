@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\ACL\Http\Controllers\RoleController;
+use App\Modules\AiPublisher\Http\Controllers\AiPublisherController;
 use App\Modules\ApiToken\Http\Controllers\ApiTokenController;
 use App\Modules\Post\Http\Controllers\CategoryController;
 use App\Modules\Post\Http\Controllers\PostController;
@@ -53,4 +54,13 @@ Route::middleware(['auth:sanctum', 'tenant'])->group(function (): void {
     Route::get('categories/{category}', [CategoryController::class, 'show']);
     Route::match(['put', 'patch'], 'categories/{category}', [CategoryController::class, 'update'])->middleware('permission:post.update');
     Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->middleware('permission:post.delete');
+
+    Route::middleware(['throttle:ai', 'permission:ai.read'])->prefix('ai')->group(function (): void {
+        Route::get('discovery', [AiPublisherController::class, 'discovery']);
+        Route::get('docs', [AiPublisherController::class, 'docs']);
+        Route::get('schema/post', [AiPublisherController::class, 'schemaPost']);
+        Route::get('schema/category', [AiPublisherController::class, 'schemaCategory']);
+        Route::get('editorial-guide', [AiPublisherController::class, 'editorialGuide']);
+        Route::post('posts', [AiPublisherController::class, 'publish'])->name('ai.publish')->middleware('permission:ai.publish');
+    });
 });

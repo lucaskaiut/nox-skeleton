@@ -24,6 +24,7 @@ class PostFactory extends Factory
             'slug' => fn (array $attrs) => Str::slug($attrs['title']),
             'excerpt' => fake()->sentences(3, true),
             'content' => '<p>'.implode('</p><p>', fake()->paragraphs(3)).'</p>',
+            'reading_time' => fake()->numberBetween(2, 15),
             'status' => 'published',
             'published_at' => now(),
         ];
