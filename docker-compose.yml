@@ -47,6 +47,23 @@ services:
     networks:
       - nox
 
+  worker:
+    build:
+      context: ./docker/php
+    container_name: nox-worker
+    restart: unless-stopped
+    command: ["worker-start.sh"]
+    working_dir: /var/www/html
+    environment:
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - ./api:/var/www/html
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - nox
+
   nginx:
     image: nginx:1.27-alpine
     container_name: nox-nginx

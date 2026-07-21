@@ -37,8 +37,9 @@ COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 COPY php.ini /usr/local/etc/php/conf.d/99-app.ini
 COPY fpm.conf /usr/local/etc/php-fpm.d/zzz-app.conf
 COPY start.sh /usr/local/bin/start.sh
+COPY worker-start.sh /usr/local/bin/worker-start.sh
 
-RUN chmod +x /usr/local/bin/start.sh \
+RUN chmod +x /usr/local/bin/start.sh /usr/local/bin/worker-start.sh \
     && git config --global --add safe.directory /var/www/html
 
 WORKDIR /var/www/html
