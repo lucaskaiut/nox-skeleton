@@ -58,7 +58,7 @@ export interface WebhookLog {
   id: number
   status_code: number | null
   response_body: string | null
-  request_payload: unknown
+  request_payload: Record<string, unknown> | null
   error_message: string | null
   duration_ms: number | null
   created_at: string | null
