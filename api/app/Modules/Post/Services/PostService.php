@@ -7,6 +7,7 @@ use App\Modules\Post\Models\Post;
 use App\Modules\Post\Models\Tag;
 use App\Modules\Post\Events\PostCreated;
 use App\Modules\Post\Events\PostDeleted;
+use App\Modules\Post\Events\PostPublished;
 use App\Modules\Post\Events\PostUpdated;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
@@ -33,16 +34,26 @@ class PostService
         $post->load(['author', 'categories', 'tags']);
         PostCreated::dispatch($post);
 
+        if ($post->status === 'published') {
+            PostPublished::dispatch($post);
+        }
+
         return $post;
     }
 
     public function update(Post $post, array $data): Post
     {
+        $wasPublished = $post->status === 'published';
+
         if (isset($data['title']) && ! isset($data['slug'])) $data['slug'] = Str::slug($data['title']);
         $post->fill(Arr::except($data, ['categories', 'tags'])); $post->save();
         $this->syncRelations($post, $data);
         $post->refresh()->load(['author', 'categories', 'tags']);
         PostUpdated::dispatch($post);
+
+        if (! $wasPublished && $post->status === 'published') {
+            PostPublished::dispatch($post);
+        }
 
         return $post;
     }

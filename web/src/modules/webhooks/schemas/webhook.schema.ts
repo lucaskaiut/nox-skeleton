@@ -4,6 +4,7 @@ export const WEBHOOK_EVENTS = [
   { value: 'post.created', label: 'Post criado' },
   { value: 'post.updated', label: 'Post atualizado' },
   { value: 'post.deleted', label: 'Post removido' },
+  { value: 'post.published', label: 'Post publicado' },
 ] as const
 
 export const WEBHOOK_METHODS = [

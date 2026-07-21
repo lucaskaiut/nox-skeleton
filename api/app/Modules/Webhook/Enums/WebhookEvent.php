@@ -7,6 +7,7 @@ enum WebhookEvent: string
     case POST_CREATED = 'post.created';
     case POST_UPDATED = 'post.updated';
     case POST_DELETED = 'post.deleted';
+    case POST_PUBLISHED = 'post.published';
 
     public function label(): string
     {
@@ -14,6 +15,7 @@ enum WebhookEvent: string
             self::POST_CREATED => 'Post criado',
             self::POST_UPDATED => 'Post atualizado',
             self::POST_DELETED => 'Post removido',
+            self::POST_PUBLISHED => 'Post publicado',
         };
     }
 
