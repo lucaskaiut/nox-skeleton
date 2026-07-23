@@ -14,6 +14,7 @@ export interface User {
   email: string
   phone: string | null
   document: string | null
+  is_master: boolean
   roles?: Role[]
   created_at: string | null
   updated_at: string | null
@@ -28,6 +29,11 @@ export interface Tenant {
   domain: string
   created_at: string | null
   updated_at: string | null
+}
+
+export interface AvailableTenant {
+  id: string
+  name: string
 }
 
 export interface ApiToken {
@@ -69,4 +75,6 @@ export interface Session {
   tenant: Tenant
   roles: Role[]
   permissions: Permission[]
+  is_master: boolean
+  available_tenants: AvailableTenant[]
 }

@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router'
 import { toast } from '@/shared/stores/toast.store'
 import { useSessionStore } from '@/shared/stores/session.store'
+import { useTenantContextStore } from '@/shared/stores/tenant.store'
 import { authService, sessionQueryOptions } from '../services/auth.service'
 
 function useAuthenticate() {
@@ -43,12 +44,14 @@ export function useRegister() {
 export function useLogout() {
   const queryClient = useQueryClient()
   const setGuest = useSessionStore((state) => state.setGuest)
+  const clearSelectedTenantId = useTenantContextStore((state) => state.clearSelectedTenantId)
   const navigate = useNavigate()
 
   return useMutation({
     mutationFn: authService.logout,
     onSettled: () => {
       setGuest()
+      clearSelectedTenantId()
       queryClient.clear()
       navigate('/auth/login', { replace: true })
     },

@@ -8,9 +8,12 @@ use App\Modules\Auth\DTOs\NewTenantData;
 use App\Modules\Auth\DTOs\NewUserData;
 use App\Modules\Auth\Http\Requests\LoginRequest;
 use App\Modules\Auth\Http\Requests\RegisterRequest;
+use App\Modules\Auth\Http\Requests\SelectTenantRequest;
 use App\Modules\Auth\Services\AuthService;
 use App\Modules\Shared\Http\Controllers\ApiController;
+use App\Modules\Tenant\Http\Resources\AvailableTenantResource;
 use App\Modules\Tenant\Http\Resources\TenantResource;
+use App\Modules\Tenant\Services\TenantSwitchService;
 use App\Modules\Tenant\Support\Facades\TenantContext;
 use App\Modules\User\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +21,10 @@ use Illuminate\Http\Request;
 
 class AuthController extends ApiController
 {
-    public function __construct(private readonly AuthService $service) {}
+    public function __construct(
+        private readonly AuthService $service,
+        private readonly TenantSwitchService $tenantSwitch,
+    ) {}
 
     public function register(RegisterRequest $request): JsonResponse
     {
@@ -59,7 +65,23 @@ class AuthController extends ApiController
             'tenant' => TenantResource::make(TenantContext::tenant()),
             'roles' => RoleResource::collection($user->roles),
             'permissions' => $user->permissionValues(),
+            'is_master' => (bool) $user->is_master,
+            'available_tenants' => AvailableTenantResource::collection(
+                $this->service->availableTenantsFor($user),
+            ),
         ]);
+    }
+
+    public function selectTenant(SelectTenantRequest $request): JsonResponse
+    {
+        $tenant = $this->tenantSwitch->select(
+            $request->user(),
+            $request->validated('tenant_id'),
+        );
+
+        return $this->success([
+            'tenant' => AvailableTenantResource::make($tenant),
+        ], 'Tenant selecionado com sucesso.');
     }
 
     /**
@@ -72,6 +94,8 @@ class AuthController extends ApiController
             'token_type' => 'Bearer',
             'user' => UserResource::make($result->user),
             'tenant' => TenantResource::make($result->tenant),
+            'is_master' => (bool) $result->user->is_master,
+            'available_tenants' => AvailableTenantResource::collection($result->availableTenants),
         ];
     }
 }

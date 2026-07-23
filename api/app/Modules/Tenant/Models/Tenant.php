@@ -9,6 +9,7 @@ use App\Modules\User\Models\User;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tenant extends Model
@@ -19,12 +20,23 @@ class Tenant extends Model
     use HasUuid;
 
     protected $fillable = [
+        'parent_id',
         'name',
         'document',
         'email',
         'phone',
         'domain',
     ];
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id');
+    }
 
     public function users(): HasMany
     {
@@ -39,6 +51,11 @@ class Tenant extends Model
     public function apiTokens(): HasMany
     {
         return $this->hasMany(ApiToken::class);
+    }
+
+    public function isUmbrella(): bool
+    {
+        return $this->children()->exists();
     }
 
     protected static function newFactory(): TenantFactory

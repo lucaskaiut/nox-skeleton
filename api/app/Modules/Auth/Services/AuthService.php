@@ -4,13 +4,17 @@ namespace App\Modules\Auth\Services;
 
 use App\Modules\ACL\Enums\DefaultRole;
 use App\Modules\ACL\Services\RoleService;
+use App\Modules\Audit\Enums\AuditAction;
+use App\Modules\Audit\Services\AuditLogService;
 use App\Modules\Auth\DTOs\AuthenticatedUser;
 use App\Modules\Auth\DTOs\NewTenantData;
 use App\Modules\Auth\DTOs\NewUserData;
+use App\Modules\Tenant\Services\MasterTenantAccessService;
 use App\Modules\Tenant\Services\TenantService;
 use App\Modules\Tenant\Support\CurrentTenant;
 use App\Modules\User\Models\User;
 use App\Modules\User\Services\UserService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -26,6 +30,8 @@ class AuthService
         private readonly RoleService $roles,
         private readonly UserService $users,
         private readonly CurrentTenant $context,
+        private readonly MasterTenantAccessService $masterAccess,
+        private readonly AuditLogService $audit,
     ) {}
 
     public function register(NewTenantData $tenantData, NewUserData $userData): AuthenticatedUser
@@ -67,13 +73,19 @@ class AuthService
         }
 
         $tenant = $user->tenant;
+        $availableTenants = $this->masterAccess->availableTenants($user);
 
         $this->context->set($tenant);
+
+        if ($user->is_master) {
+            $this->audit->record($user, AuditAction::MasterLogin, $tenant);
+        }
 
         return new AuthenticatedUser(
             user: $user->load('roles.permissions'),
             tenant: $tenant,
             token: $this->authenticate($user),
+            availableTenants: $availableTenants,
         );
     }
 
@@ -92,6 +104,14 @@ class AuthService
             $request->session()->invalidate();
             $request->session()->regenerateToken();
         }
+    }
+
+    /**
+     * @return Collection<int, \App\Modules\Tenant\Models\Tenant>
+     */
+    public function availableTenantsFor(User $user): Collection
+    {
+        return $this->masterAccess->availableTenants($user);
     }
 
     /**

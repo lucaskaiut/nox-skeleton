@@ -4,6 +4,7 @@ use App\Modules\ACL\Http\Middleware\EnsurePermission;
 use App\Modules\ApiToken\Http\Middleware\AuthenticateApiToken;
 use App\Modules\ApiToken\Http\Middleware\MultiAuthenticate;
 use App\Modules\Shared\Http\ApiError;
+use App\Modules\Tenant\Exceptions\TenantAccessForbidden;
 use App\Modules\Tenant\Exceptions\TenantCouldNotBeResolved;
 use App\Modules\Tenant\Http\Middleware\ResolveTenant;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -58,6 +59,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (TenantCouldNotBeResolved $e, Request $request) {
             if (ApiError::shouldRender($request)) {
                 return ApiError::response($e->getMessage(), 404);
+            }
+        });
+
+        $exceptions->render(function (TenantAccessForbidden $e, Request $request) {
+            if (ApiError::shouldRender($request)) {
+                return ApiError::response($e->getMessage(), 403);
             }
         });
 

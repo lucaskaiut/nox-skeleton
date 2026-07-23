@@ -1,7 +1,9 @@
 import { Suspense } from 'react'
 import { Outlet } from 'react-router'
 import { LayoutDashboard, KeyRound, LogOut, Menu, ShieldCheck, Users, Webhook, Zap } from 'lucide-react'
+import { TenantSelector } from '@/modules/auth/components/TenantSelector'
 import { useSessionStore } from '@/shared/stores/session.store'
+import { useTenantContextStore } from '@/shared/stores/tenant.store'
 import { useUiStore } from '@/shared/stores/ui.store'
 import { Permission } from '@/shared/constants/permissions'
 import { usePermissions } from '@/shared/hooks/usePermissions'
@@ -23,6 +25,13 @@ import { cn } from '@/shared/utils/cn'
 
 function Brand() {
   const tenant = useSessionStore((state) => state.tenant)
+  const isMaster = useSessionStore((state) => state.isMaster)
+  const availableTenants = useSessionStore((state) => state.availableTenants)
+  const selectedTenantId = useTenantContextStore((state) => state.selectedTenantId)
+
+  const activeName = isMaster
+    ? (availableTenants.find((item) => item.id === selectedTenantId)?.name ?? tenant?.name)
+    : tenant?.name
 
   return (
     <div className="flex items-center gap-2.5 px-1">
@@ -31,7 +40,7 @@ function Brand() {
       </span>
       <span className="min-w-0">
         <span className="block text-sm leading-tight font-semibold text-foreground">Nox</span>
-        <span className="block truncate text-xs text-muted">{tenant?.name}</span>
+        <span className="block truncate text-xs text-muted">{activeName}</span>
       </span>
     </div>
   )
@@ -136,6 +145,7 @@ export function AppLayout() {
             <Menu className="size-5" />
           </button>
           <div className="ml-auto flex items-center gap-1.5">
+            <TenantSelector />
             <ThemeToggle />
             <UserMenu />
           </div>
