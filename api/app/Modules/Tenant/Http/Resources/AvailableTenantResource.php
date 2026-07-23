@@ -21,6 +21,7 @@ class AvailableTenantResource extends JsonResource
         return [
             'id' => $this->uuid,
             'name' => $this->name,
+            'is_home' => (bool) ($this->is_home ?? $this->parent_id === null),
         ];
     }
 }

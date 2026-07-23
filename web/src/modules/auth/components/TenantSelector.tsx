@@ -8,7 +8,7 @@ import { toast } from '@/shared/stores/toast.store'
 
 /**
  * Seletor global de empresa — visível apenas para usuários master.
- * Ao trocar, audita no backend, persiste a seleção e invalida o cache.
+ * Inclui o tenant parent (home). Ao selecioná-lo, nenhum X-Tenant-Id é enviado.
  */
 export function TenantSelector() {
   const isMaster = useSessionStore((state) => state.isMaster)
@@ -44,7 +44,7 @@ export function TenantSelector() {
         value={selectedTenantId ?? ''}
         options={availableTenants.map((tenant) => ({
           value: tenant.id,
-          label: tenant.name,
+          label: tenant.is_home ? `${tenant.name} (grupo)` : tenant.name,
         }))}
         onChange={(event) => {
           const nextId = event.target.value

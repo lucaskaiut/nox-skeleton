@@ -34,6 +34,7 @@ export interface Tenant {
 export interface AvailableTenant {
   id: string
   name: string
+  is_home?: boolean
 }
 
 export interface ApiToken {

@@ -24,10 +24,15 @@ export const http = axios.create({
 })
 
 http.interceptors.request.use((config) => {
-  const { isMaster } = useSessionStore.getState()
+  const { isMaster, availableTenants } = useSessionStore.getState()
   const { selectedTenantId } = useTenantContextStore.getState()
+  const homeTenantId = availableTenants.find((tenant) => tenant.is_home)?.id
 
-  if (isMaster && selectedTenantId) {
+  // Parent/home selecionado → não envia X-Tenant-Id (contexto do próprio tenant).
+  const shouldSendTenantHeader =
+    isMaster && Boolean(selectedTenantId) && selectedTenantId !== homeTenantId
+
+  if (shouldSendTenantHeader && selectedTenantId) {
     config.headers.set('X-Tenant-Id', selectedTenantId)
   } else {
     config.headers.delete('X-Tenant-Id')

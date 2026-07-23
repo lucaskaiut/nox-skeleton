@@ -42,9 +42,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    const first = data.available_tenants[0]
-    if (first) {
-      setSelectedTenantId(first.id)
+    // Preferência: parent/home (sem X-Tenant-Id); fallback no primeiro da lista.
+    const home = data.available_tenants.find((tenant) => tenant.is_home)
+    const fallback = home ?? data.available_tenants[0]
+
+    if (fallback) {
+      setSelectedTenantId(fallback.id)
     } else {
       clearSelectedTenantId()
     }

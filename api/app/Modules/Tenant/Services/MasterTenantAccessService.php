@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 class MasterTenantAccessService
 {
     /**
-     * Tenants filhos que o usuário master pode operar.
+     * Tenant home (parent) + filhos que o usuário master pode operar.
      *
      * @return Collection<int, Tenant>
      */
@@ -21,10 +21,21 @@ class MasterTenantAccessService
             return new Collection;
         }
 
-        return Tenant::query()
+        $home = $user->tenant()->first(['id', 'uuid', 'name', 'parent_id']);
+
+        if ($home === null) {
+            return new Collection;
+        }
+
+        $home->setAttribute('is_home', true);
+
+        $children = Tenant::query()
             ->where('parent_id', $user->tenant_id)
             ->orderBy('name')
-            ->get(['id', 'uuid', 'name', 'parent_id']);
+            ->get(['id', 'uuid', 'name', 'parent_id'])
+            ->each(fn (Tenant $tenant) => $tenant->setAttribute('is_home', false));
+
+        return (new Collection([$home]))->concat($children)->values();
     }
 
     public function canAccess(User $user, Tenant|int $tenant): bool

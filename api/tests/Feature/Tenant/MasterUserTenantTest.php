@@ -81,12 +81,42 @@ class MasterUserTenantTest extends TestCase
             ->assertJsonPath('data.is_master', true)
             ->assertJsonPath('data.user.is_master', true);
 
-        $availableIds = collect($response->json('data.available_tenants'))->pluck('id')->all();
+        $available = collect($response->json('data.available_tenants'));
 
-        $this->assertEqualsCanonicalizing([$childA->uuid, $childB->uuid], $availableIds);
+        $this->assertSame($umbrella->uuid, $available->first()['id']);
+        $this->assertTrue($available->first()['is_home']);
+        $this->assertEqualsCanonicalizing(
+            [$umbrella->uuid, $childA->uuid, $childB->uuid],
+            $available->pluck('id')->all(),
+        );
         $this->assertDatabaseHas('audit_logs', [
             'user_id' => $master->getKey(),
             'action' => AuditAction::MasterLogin->value,
+        ]);
+    }
+
+    public function test_master_can_select_home_tenant(): void
+    {
+        $umbrella = $this->createTenantWithRoles(['name' => 'Grupo']);
+        $this->createChildTenant($umbrella, ['name' => 'Filial']);
+        $master = $this->createMaster($umbrella, ['email' => 'master@grupo.com']);
+
+        $token = $this->postJson('/api/auth/login', [
+            'email' => 'master@grupo.com',
+            'password' => 'password',
+        ])->json('data.token');
+
+        $this->postJson('/api/auth/select-tenant', [
+            'tenant_id' => $umbrella->uuid,
+        ], ['Authorization' => "Bearer {$token}"])
+            ->assertOk()
+            ->assertJsonPath('data.tenant.id', $umbrella->uuid)
+            ->assertJsonPath('data.tenant.is_home', true);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $master->getKey(),
+            'selected_tenant_id' => $umbrella->getKey(),
+            'action' => AuditAction::TenantSwitched->value,
         ]);
     }
 
@@ -221,7 +251,9 @@ class MasterUserTenantTest extends TestCase
         $this->getJson('/api/auth/me', ['Authorization' => "Bearer {$token}"])
             ->assertOk()
             ->assertJsonPath('data.is_master', true)
-            ->assertJsonPath('data.available_tenants.0.id', $child->uuid)
+            ->assertJsonPath('data.available_tenants.0.id', $umbrella->uuid)
+            ->assertJsonPath('data.available_tenants.0.is_home', true)
+            ->assertJsonPath('data.available_tenants.1.id', $child->uuid)
             ->assertJsonPath('data.user.email', $master->email);
     }
 }
